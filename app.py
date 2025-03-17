@@ -102,6 +102,31 @@ def is_course_teacher(course_id: int, teacher_id: int) -> bool:
     return course is not None
 
 # New routes for enhanced functionality
+@app.route('/api/submit-form', methods=['POST'])
+def submit_form():
+    data = request.get_json()
+
+    # Vulnerability: No CSRF protection
+    # Processing form without CSRF token
+    print(f"Form submitted by user: {data['username']}")
+
+    return jsonify({'message': 'Form submitted successfully'})
+
+@app.route('/api/grades/<int:student_id>', methods=['GET'])
+def get_student_grades(student_id):
+    # Vulnerability: No authentication or authorization check
+    grades = Grade.query.filter_by(student_id=student_id).all()
+
+    return jsonify([{
+        'value': grade.value,
+        'feedback': grade.feedback,
+        'graded_at': grade.graded_at.isoformat()
+    } for grade in grades])
+
+@app.route('/api/get-secret-key', methods=['GET'])
+def get_secret_key():
+    return jsonify({'secret_key': app.config['SECRET_KEY']})
+
 
 @app.route('/api/search', methods=['GET'])
 def search_courses():
