@@ -33,7 +33,7 @@ jobs:
       uses: SonarSource/sonarcloud-github-action@v1
       with:
         sonarcloud_token: ${{ secrets.SONAR_TOKEN }}  # Use GitHub Secrets for SONAR_TOKEN
-        sonarcloud_org: ${{ secrets.SONAR_ORG }}      # Use GitHub Secrets for SONAR_ORG
+        sonarcloud_organization: ${{ secrets.SONAR_ORGANIZATION }}      # Use GitHub Secrets for SONAR_ORG
         sonarcloud_project_key: ${{ secrets.SONAR_PROJECT_KEY }} # Use GitHub Secrets for SONAR_PROJECT_KEY
         sonarcloud_project_name: 'backend-project'  # (Optional) You can specify the project name here
       env:
