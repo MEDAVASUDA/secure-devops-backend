@@ -103,6 +103,15 @@ def is_course_teacher(course_id: int, teacher_id: int) -> bool:
 
 # New routes for enhanced functionality
 
+@app.route('/api/search', methods=['GET'])
+def search_courses():
+    search_query = request.args.get('query')
+
+    # Vulnerability: Unsanitized user input in SQL query using LIKE
+    query = f"SELECT * FROM course WHERE title LIKE '%{search_query}%'"
+    result = db.session.execute(query)
+
+    return jsonify({'courses': [course for course in result]})
 
 @app.route('/', methods=['GET'])
 def first():
