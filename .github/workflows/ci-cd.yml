@@ -8,29 +8,30 @@ on:
 
 jobs:
   sonarqube:
-    name: SonarQube Scan
     runs-on: ubuntu-latest
+
     steps:
-      - uses: SonarSource/sonarqube-scan-action@v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for better analysis
-      
+          fetch-depth: 0  # Required for better analysis history
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov
-      
+
       - name: Run tests with coverage
         run: |
           pytest --cov=. --cov-report=xml
-      
-      # Create sonar-project.properties file dynamically
+
+      # Create sonar-project.properties dynamically
       - name: Create sonar-project.properties
         run: |
           cat > sonar-project.properties << EOF
@@ -39,12 +40,12 @@ jobs:
           sonar.projectName=Secure DevOps Backend
           sonar.branch.name=main
           sonar.sources=.
-          sonar.tests=test_app.py
+          sonar.tests=tests
           sonar.python.coverage.reportPaths=coverage.xml
           sonar.sourceEncoding=UTF-8
           sonar.python.version=3.10
           EOF
-      
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
