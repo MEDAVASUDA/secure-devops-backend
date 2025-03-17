@@ -1,54 +1,56 @@
-name: Backend CI/CD Pipeline
+name: Backend CI/CD
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+  push:
+    branches:
+      - main
 
 jobs:
-  sonarqube:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required for better analysis history
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
 
-      - name: Run tests with coverage
-        run: |
-          pytest --cov=. --cov-report=xml
+    - name: Run tests
+      run: |
+        pytest
 
-      # Create sonar-project.properties dynamically
-      - name: Create sonar-project.properties
-        run: |
-          cat > sonar-project.properties << EOF
-          sonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-          sonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-          sonar.projectName=Secure DevOps Backend
-          sonar.branch.name=main
-          sonar.sources=.
-          sonar.tests=tests
-          sonar.python.coverage.reportPaths=coverage.xml
-          sonar.sourceEncoding=UTF-8
-          sonar.python.version=3.10
-          EOF
+    - name: SonarQube Analysis
+      uses: SonarSource/sonarcloud-github-action@v1
+      with:
+        sonarcloud_token: ${{ secrets.SONAR_TOKEN }}  # Use GitHub Secrets for SONAR_TOKEN
+        sonarcloud_org: ${{ secrets.SONAR_ORG }}      # Use GitHub Secrets for SONAR_ORG
+        sonarcloud_project_key: ${{ secrets.SONAR_PROJECT_KEY }} # Use GitHub Secrets for SONAR_PROJECT_KEY
+      env:
+        SONAR_SCANNER_OPTS: "-Xmx2G"
+      run: |
+        sonar-scanner
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+  snyk:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install SNYK
+      run: pip install snyk
+
+    - name: Test for vulnerabilities using SNYK
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Use GitHub Secrets for SNYK_TOKEN
+      run: snyk test
